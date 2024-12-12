@@ -177,8 +177,12 @@
                 <div class="col-md-6">
                     <h4>Bảo mật </h4>
                     <a href="KeyGenerationServlet">Tạo key</a><br>
-                    <a href="keyUpload.jsp">Đã có Key</a>
-                    <a href="">REPORT</a>
+                    <a href="keyUpload.jsp">Đã có Key</a><br>
+                    <h5>Nếu như bạn bị lộ private key hãy nhấn vào button phía dưới: </h5><br>
+                    <form action="ReportKeyServlet" method="POST">
+                        <button type="submit" class="btn btn-danger">Report</button>
+                    </form>
+
 
                 </div>
             </div>
