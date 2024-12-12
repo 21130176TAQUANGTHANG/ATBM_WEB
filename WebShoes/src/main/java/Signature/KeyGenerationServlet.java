@@ -4,6 +4,7 @@ import LoginUser.AccountFF;
 import LoginUser.GoogleAccount;
 import LoginUser.User;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,7 +14,9 @@ import java.io.IOException;
 import java.security.*;
 import java.util.Base64;
 
+@WebServlet("/KeyGenerationServlet")
 public class KeyGenerationServlet extends HttpServlet {
+
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession();
@@ -43,6 +46,17 @@ public class KeyGenerationServlet extends HttpServlet {
         }
 
         try {
+            DbSecurity db = new DbSecurity();
+
+            // Kiểm tra nếu người dùng đã có Public Key
+            if (db.isPublicKeyExist(userId)) {
+                String existingPublicKey = db.getPublicKeyFromDatabase(userId);
+                req.setAttribute("publicKey", existingPublicKey);
+                req.setAttribute("errorMessage", "Người dùng đã có public key. Đây là public key của bạn.");
+                req.getRequestDispatcher("keyResult.jsp").forward(req, resp);
+                return;
+            }
+
             // Tạo cặp key mới
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
             keyGen.initialize(2048);
@@ -60,6 +74,13 @@ public class KeyGenerationServlet extends HttpServlet {
             req.setAttribute("privateKey", encodedPrivateKey);
             req.getSession().setAttribute("privateKey", privateKey);
 
+            // Lưu Public Key vào Database
+            db.savePublicKeyToDatabase(userId, encodedPublicKey);
+
+            System.out.println("Public Key: " + encodedPublicKey);
+            System.out.println("Private Key: " + encodedPrivateKey);
+            System.out.println("Private Key lưu vào session: " + privateKey);
+
 
             // Chuyển hướng đến trang hiển thị kết quả
             req.getRequestDispatcher("keyResult.jsp").forward(req, resp);
@@ -72,4 +93,5 @@ public class KeyGenerationServlet extends HttpServlet {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi khi xử lý cơ sở dữ liệu.");
         }
     }
+
 }
