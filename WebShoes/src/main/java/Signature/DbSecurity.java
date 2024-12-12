@@ -2,22 +2,22 @@ package Signature;
 
 import DBConnect.DBContext;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 
 public class DbSecurity {
     Connection conn;
     PreparedStatement ps;
     ResultSet rs;
 
-    public void savePublicKeyToDatabase(String userId, String publicKey) {
+    public void savePublicKeyToDatabase(String userId, String publicKey,  Timestamp createTime, Timestamp endTime) {
         try {
-            String query = "INSERT INTO users (userId, publicKey) VALUES (?, ?)";
+            String query = "INSERT INTO users (userId, publicKey, createTime, endTime) VALUES (?, ?, ?, ?)";
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
             ps.setString(1, userId);
             ps.setString(2, publicKey);
+            ps.setTimestamp(3, createTime);
+            ps.setTimestamp(4, endTime); // ban đầu là null
             ps.executeUpdate();
         } catch (Exception e) {
             throw new RuntimeException(e);
