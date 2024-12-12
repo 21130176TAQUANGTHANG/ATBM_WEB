@@ -48,22 +48,8 @@
   </nav>
 </header>
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Thông Tin Đơn Hàng</h2>
-    <c:forEach var="order" items="${orders}">
-        <div class="order-details">
-            <p><strong>Mã đơn hàng:</strong> ${order.orderId}</p>
-            <p><strong>Ngày đặt:</strong> ${order.orderDate}</p>
-            <p><strong>Trạng thái:</strong> ${order.status}</p>
-            <p><strong>Tổng tiền:</strong> <fmt:formatNumber value="${order.totalPrice}" type="currency" currencySymbol="₫" /></p>
-            <c:forEach var="orderItem" items="${order.orderItems}">
-                <div>
-                    <p><strong>Sản phẩm:</strong> ${orderItem.productName}</p>
-                    <p><strong>Số lượng:</strong> ${orderItem.quantity}</p>
-                    <p><strong>Giá:</strong> <fmt:formatNumber value="${orderItem.price}" type="currency" currencySymbol="₫" /></p>
-                </div>
-            </c:forEach>
-        </div>
-    </c:forEach>
+    <h2 class="text-center mb-4">Bạn Đã Đặt Hàng Thành Công</h2>
+
 </div>
 
 </body>

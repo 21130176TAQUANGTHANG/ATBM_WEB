@@ -1,23 +1,36 @@
 package Order;
 
 public class OrderItem {
-    private int orderId;
+    private int productId;
     private String productName;
+    private int price;
     private int quantity;
-    private double price;
+    private String size;
+    private int subtotal;
 
-    public OrderItem(String productName, int quantity, double price) {
+    public OrderItem(int productId, String productName, int price, int quantity, String size, int subtotal) {
+        this.productId = productId;
+        this.productName = productName;
+        this.price = price;
+        this.quantity = quantity;
+        this.size = size;
+        this.subtotal = subtotal;
+    }
+    public OrderItem(String productName, int quantity, int price, int subtotal, String size) {
         this.productName = productName;
         this.quantity = quantity;
         this.price = price;
+        this.subtotal = subtotal;
+        this.size = size;
     }
 
-    public int getOrderId() {
-        return orderId;
+    // Getter và Setter
+    public int getProductId() {
+        return productId;
     }
 
-    public void setOrderId(int orderId) {
-        this.orderId = orderId;
+    public void setProductId(int productId) {
+        this.productId = productId;
     }
 
     public String getProductName() {
@@ -28,6 +41,14 @@ public class OrderItem {
         this.productName = productName;
     }
 
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
+
     public int getQuantity() {
         return quantity;
     }
@@ -36,11 +57,31 @@ public class OrderItem {
         this.quantity = quantity;
     }
 
-    public double getPrice() {
-        return price;
+    public String getSize() {
+        return size;
     }
 
-    public void setPrice(double price) {
-        this.price = price;
+    public void setSize(String size) {
+        this.size = size;
+    }
+
+    public int getSubtotal() {
+        return subtotal;
+    }
+
+    public void setSubtotal(int subtotal) {
+        this.subtotal = subtotal;
+    }
+
+    @Override
+    public String toString() {
+        return "OrderItem{" +
+                "productId=" + productId +
+                ", productName='" + productName + '\'' +
+                ", price=" + price +
+                ", quantity=" + quantity +
+                ", size='" + size + '\'' +
+                ", subtotal=" + subtotal +
+                '}';
     }
 }

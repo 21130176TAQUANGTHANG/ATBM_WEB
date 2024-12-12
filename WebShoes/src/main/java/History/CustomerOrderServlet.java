@@ -39,7 +39,7 @@ public class CustomerOrderServlet  extends HttpServlet {
                 userId = googleId; // Lưu googleId mà không cần chuyển đổi
                 System.out.println("userIdGG = " + userId);
             } else {
-                resp.sendRedirect("checkout.jsp?error=invalidGoogleId");
+                resp.sendRedirect("");
                 return;
             }
         }
@@ -51,14 +51,14 @@ public class CustomerOrderServlet  extends HttpServlet {
                 userId = facebookUser.getId();
                 System.out.println("userIdFF = " + userId);
             } catch (NumberFormatException e) {
-                resp.sendRedirect("checkout.jsp?error=invalidFacebookId");
+                resp.sendRedirect("");
                 return;
             }
         }
 
         // Đảm bảo rằng userId không phải là null
         if (userId == null) {
-            resp.sendRedirect("checkout.jsp?error=noUser");
+            resp.sendRedirect("");
             return;
         }
         Dbhistory dao = new Dbhistory();
