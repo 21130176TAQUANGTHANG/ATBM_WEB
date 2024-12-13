@@ -1,5 +1,6 @@
 package Signature;
 
+import LoginUser.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,54 +18,41 @@ import java.util.Base64;
 @WebServlet("/ReportKeyServlet")
 public class ReportKeyServlet extends HttpServlet {
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        // Điều hướng sang phương thức xử lý chính nếu cần
-        doPost(req, resp);
-    }
-
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        resp.getWriter().write("Key has been reported successfully.");
         HttpSession session = req.getSession();
-        String userId = (String) session.getAttribute("userId"); // Lấy userId từ session
+        String userId = null;
+
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            userId = user.getId();
+        }
 
         if (userId == null) {
-            resp.sendRedirect("newKeyResult.jsp");
+            resp.sendRedirect("login.jsp"); // Chuyển hướng nếu chưa đăng nhập
             return;
         }
 
         try {
             DbSecurity db = new DbSecurity();
-            Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+            KeyDeletionScheduler scheduler = new KeyDeletionScheduler();
 
-            // Cập nhật endTime cho public key hiện tại khi báo mất key
-            db.updateEndTime(userId, currentTime);
+            // Cập nhật thời gian endTime
+            db.reportLostKey(userId);
 
-            // Tạo cặp key mới
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-            keyGen.initialize(2048);
-            KeyPair pair = keyGen.generateKeyPair();
+            // Tính toán thời gian xóa key
+            long currentTime = System.currentTimeMillis();
+            long deletionTime = currentTime + 60000; // 1 phút sau
+            Timestamp deletionTimestamp = new Timestamp(deletionTime);
 
-            // Chuyển đổi Public Key và Private Key sang dạng Base64
-            String newPublicKey = Base64.getEncoder().encodeToString(pair.getPublic().getEncoded());
-            String newPrivateKey = Base64.getEncoder().encodeToString(pair.getPrivate().getEncoded());
+            // Lập lịch xóa key
+            scheduler.scheduleKeyDeletion(userId);
 
-            // Lưu public key mới vào database (createTime = currentTime, endTime = null)
-            db.savePublicKeyToDatabase(userId, newPublicKey, currentTime, null);
-
-            // Lưu private key vào session hoặc trả về cho người dùng
-            session.setAttribute("privateKey", newPrivateKey);
-
-            // Chuyển hướng đến trang hiển thị kết quả
-            req.setAttribute("publicKey", newPublicKey);
-            req.setAttribute("privateKey", newPrivateKey);
-            req.getRequestDispatcher("newKeyResult.jsp").forward(req, resp);
-
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi khi tạo cặp khóa.");
+            // Gửi thông tin thời gian xóa đến JSP
+            req.setAttribute("deletionTime", deletionTimestamp);
+            req.getRequestDispatcher("userProfile.jsp").forward(req, resp);
         } catch (Exception e) {
             e.printStackTrace();
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi khi xử lý báo mất key.");
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Lỗi khi báo mất khóa.");
         }
     }
 }

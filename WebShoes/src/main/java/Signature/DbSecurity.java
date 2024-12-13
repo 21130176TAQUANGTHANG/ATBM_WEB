@@ -59,36 +59,8 @@ public class DbSecurity {
         return null;
     }
 
-    // Cập nhật endTime cho public key khi báo mất key
-    public void updateEndTime(String userId, Timestamp endTime) {
-        try {
-            String query = "UPDATE users SET endTime = ? WHERE userId = ? AND endTime IS NULL";
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
-            ps.setTimestamp(1, endTime); // Thời gian khi báo mất key
-            ps.setString(2, userId);
-            ps.executeUpdate();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
-    // Lấy public key hiện tại từ cơ sở dữ liệu (dùng cho việc báo mất key)
-    public String getCurrentPublicKey(String userId) {
-        String query = "SELECT publicKey FROM users WHERE userId = ? AND endTime IS NULL";
-        try {
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
-            ps.setString(1, userId);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getString("publicKey");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return null;
-    }
+
 
     public static void main(String[] args) {
         DbSecurity db = new DbSecurity();
@@ -97,12 +69,5 @@ public class DbSecurity {
         boolean exists = db.isPublicKeyExist("1");
         System.out.println("Public key exists: " + exists);
 
-        // Cập nhật endTime khi báo mất key
-        Timestamp endTime = new Timestamp(System.currentTimeMillis());
-        db.updateEndTime("1", endTime);
-
-        // Lấy public key hiện tại
-        String publicKey = db.getPublicKeyFromDatabase("1");
-        System.out.println("Current Public Key: " + publicKey);
     }
 }
