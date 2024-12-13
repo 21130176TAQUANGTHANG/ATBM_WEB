@@ -192,6 +192,7 @@
                 <th>Tổng tiền</th>
                 <th>Ghi chú</th>
                 <th>Trạng thái</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -208,7 +209,14 @@
                         <td><fmt:formatNumber value="${o.totalPrice}" type="currency" currencySymbol="₫" /></td>
                         <td>${o.notes}</td>
                         <td>${o.status}</td>
+                        <td>
+                            <form action="${pageContext.request.contextPath}/downloadBill" method="GET">
+                                <input type="hidden" name="orderId" value="${o.orderId}">
+                                <button type="submit" class="btn btn-success">In hóa đơn</button>
+                            </form>
+                        </td>
                     </tr>
+
                 </c:forEach>
             </c:if>
             </tbody>
