@@ -1,10 +1,4 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: thang
-  Date: 12/5/2024
-  Time: 10:36 PM
-  To change this template use File | Settings | File Templates.
---%>
+
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
@@ -175,27 +169,20 @@
 
                 <!-- Cột bên phải: Nội dung bổ sung -->
                 <div class="col-md-6">
-                    <h4>Bảo mật</h4>
+                    <h4>Bảo mật </h4>
+                    <c:choose>
+                        <c:when test="${userHasKey}">
+                            <p class="text-muted">Bạn đã có key. Nếu muốn thay thế, hãy tải lên key mới.</p>
+                            <a href="keyUpload.jsp"><i class="fas fa-upload"></i> Đã có Key</a><br>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="KeyGenerationServlet"><i class="fas fa-key"></i> Tạo key</a><br>
+                        </c:otherwise>
+                    </c:choose>
                     <a href="KeyGenerationServlet">Tạo key</a><br>
                     <a href="keyUpload.jsp">Đã có Key</a><br>
-                    <h5>Nếu như bạn bị lộ private key hãy nhấn vào button phía dưới:</h5><br>
-                    <form action="ReportKeyServlet" method="POST">
-                        <button type="submit" class="btn btn-danger">Report</button>
-                    </form>
-
-                    <!-- Hiển thị thông báo nếu có -->
-                    <c:if test="${not empty deletionTime}">
-                        <div class="alert alert-warning mt-3">
-                            Khóa của bạn sẽ bị xóa vào lúc <strong>${deletionTime}</strong>.
-                        </div>
-                    </c:if>
-
-                    <!-- Hiển thị thông báo key đã xóa thành công -->
-                    <c:if test="${not empty successMessage}">
-                        <div class="alert alert-success mt-3">
-                                ${successMessage}
-                        </div>
-                    </c:if>
+                    <h5 style="font-size: 14px;">Nếu bạn bị lộ private key hãy nhấn vào nút dưới đây:</h5>
+                    <a href="reportResult.jsp">REPORT</a>
                 </div>
             </div>
         </div>
