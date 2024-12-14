@@ -70,6 +70,8 @@ public class KeyGenerationServlet extends HttpServlet {
             // Chuyển đổi Public Key sang Base64
             String encodedPublicKey = Base64.getEncoder().encodeToString(publicKey.getEncoded());
             req.setAttribute("publicKey", encodedPublicKey);
+            req.getSession().setAttribute("publicKey", publicKey);
+
 
             // Mã hóa Private Key và lưu vào session
             String encodedPrivateKey = Base64.getEncoder().encodeToString(privateKey.getEncoded());

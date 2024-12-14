@@ -114,6 +114,28 @@ public class Dbhistory {
         }
         return confirmedOrders;
     }
+    public boolean cancelOrder(int orderId) {
+        String sql = "UPDATE orders SET status = 'Đã hủy' WHERE order_id = ? AND status = 'Chờ xác nhận'";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setInt(1, orderId);
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0; // Trả về true nếu có dòng bị ảnh hưởng
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+                if (conn != null) conn.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     public static void main(String[] args) {
         Dbhistory db = new Dbhistory();

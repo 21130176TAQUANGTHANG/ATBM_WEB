@@ -43,3 +43,23 @@ public class DownloadPublicKeyServlet extends HttpServlet {
 }
 
 
+        PublicKey publicKey = (PublicKey) req.getSession().getAttribute("publicKey");
+        if (publicKey == null) {
+            resp.getWriter().write("Không tìm thấy Public Key!");
+            return;
+        }
+
+        // Chuyển đổi PublicKey sang Base64
+        String encodedPublicKey = Base64.getEncoder().encodeToString(publicKey.getEncoded());
+
+        // Đặt tiêu đề tải về, đổi tên file thành publicKey.txt
+        resp.setContentType("text/plain");
+        resp.setHeader("Content-Disposition", "attachment;filename=publicKey.txt");
+
+        // Ghi dữ liệu ra file tải về
+        try (OutputStream out = resp.getOutputStream()) {
+            out.write(encodedPublicKey.getBytes());
+            out.flush();
+        }
+    }
+}
