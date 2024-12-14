@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> buu
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
@@ -171,13 +175,23 @@
                     <h4>Bảo mật </h4>
                     <c:choose>
                         <c:when test="${userHasKey}">
+<<<<<<< HEAD
                             <p class="text-success">Bạn đã có key. Nếu muốn thay thế, hãy tải lên key mới.</p>
                             <a href="keyUpload.jsp"><i class="fas fa-upload mb-3"></i> Đã có Key</a><br>
+=======
+                            <p class="text-muted">Bạn đã có key. Nếu muốn thay thế, hãy tải lên key mới.</p>
+                            <a href="keyUpload.jsp"><i class="fas fa-upload"></i> Đã có Key</a><br>
+>>>>>>> buu
                         </c:when>
                         <c:otherwise>
                             <a href="KeyGenerationServlet"><i class="fas fa-key"></i> Tạo key</a><br>
                         </c:otherwise>
                     </c:choose>
+<<<<<<< HEAD
+=======
+                    <a href="KeyGenerationServlet">Tạo key</a><br>
+                    <a href="keyUpload.jsp">Đã có Key</a><br>
+>>>>>>> buu
                     <h5 style="font-size: 14px;">Nếu bạn bị lộ private key hãy nhấn vào nút dưới đây:</h5>
                     <a href="reportResult.jsp">REPORT</a>
                 </div>

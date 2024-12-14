@@ -16,6 +16,7 @@ public class DbSecurity {
     PreparedStatement ps;
     ResultSet rs;
 
+<<<<<<< HEAD
     public boolean hasKey(String userId) {
         String query = "SELECT publicKey FROM users WHERE userId=?";
         try {
@@ -43,6 +44,9 @@ public class DbSecurity {
     }
 
 
+=======
+    // Lưu public key vào cơ sở dữ liệu
+>>>>>>> buu
     public void savePublicKeyToDatabase(String userId, String publicKey, Timestamp createTime, Timestamp endTime) {
         try {
             String query = "INSERT INTO users (userId, publicKey, createTime, endTime) VALUES (?, ?, ?, ?)";
@@ -51,13 +55,14 @@ public class DbSecurity {
             ps.setString(1, userId);
             ps.setString(2, publicKey);
             ps.setTimestamp(3, createTime);
-            ps.setTimestamp(4, endTime); // ban đầu là null
+            ps.setTimestamp(4, endTime); // endTime có thể là null nếu là khóa mới
             ps.executeUpdate();
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
+<<<<<<< HEAD
     public void savePublicKeyToDatabase(String userId, String publicKey) {
         try {
             String query = "INSERT INTO users (userId, publicKey) VALUES (?, ?)";
@@ -71,28 +76,28 @@ public class DbSecurity {
         }
     }
 
+=======
+    // Kiểm tra nếu người dùng đã có public key
+>>>>>>> buu
     public boolean isPublicKeyExist(String userId) {
-        // Thay bằng truy vấn thực tế của bạn
-        String query = "SELECT COUNT(*) FROM users WHERE userId = ?";
+        String query = "SELECT COUNT(*) FROM users WHERE userId = ? AND endTime IS NULL";
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
             ps.setString(1, userId);
             rs = ps.executeQuery();
-            while (rs.next()) {
-                if (rs.getInt(1) > 0) {
-                    return true;
-                }
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
         return false;
     }
 
+    // Lấy public key từ cơ sở dữ liệu
     public String getPublicKeyFromDatabase(String userId) {
-        String query = "SELECT publicKey FROM users WHERE userId = ?";
+        String query = "SELECT publicKey FROM users WHERE userId = ? AND endTime IS NULL";
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
@@ -107,18 +112,93 @@ public class DbSecurity {
         return null;
     }
 
+<<<<<<< HEAD
     public void updateKeyEndTime(String userId) {
         String query = "UPDATE users SET endTime = CURRENT_TIMESTAMP WHERE userId = ?";
+=======
+    // Cập nhật endTime cho public key khi báo mất key
+    public void updateEndTime(String userId, Timestamp endTime) {
+        try {
+            String query = "UPDATE users SET endTime = ? WHERE userId = ? AND endTime IS NULL";
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setTimestamp(1, endTime); // Thời gian khi báo mất key
+            ps.setString(2, userId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // Lấy public key hiện tại từ cơ sở dữ liệu (dùng cho việc báo mất key)
+    public String getCurrentPublicKey(String userId) {
+        String query = "SELECT publicKey FROM users WHERE userId = ? AND endTime IS NULL";
+>>>>>>> buu
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
             ps.setString(1, userId);
+<<<<<<< HEAD
             ps.executeUpdate();
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
             closeResources();
         }
+=======
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("publicKey");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+    public void reportLostKey(String userId) {
+        String query = "UPDATE users SET endTime = ? WHERE userId = ? AND endTime IS NULL";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+
+            // Thời điểm hiện tại
+            Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+            ps.setTimestamp(1, currentTime); // Gán endTime = thời điểm hiện tại
+            ps.setString(2, userId);
+
+            ps.executeUpdate();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public void deleteKey(String userId) {
+        String query = "DELETE FROM users WHERE userId = ?";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+
+            ps.setString(1, userId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void main(String[] args) {
+        DbSecurity db = new DbSecurity();
+
+        // Kiểm tra nếu public key tồn tại
+        boolean exists = db.isPublicKeyExist("1");
+        System.out.println("Public key exists: " + exists);
+
+        // Cập nhật endTime khi báo mất key
+        Timestamp endTime = new Timestamp(System.currentTimeMillis());
+        db.updateEndTime("1", endTime);
+
+        // Lấy public key hiện tại
+        String publicKey = db.getPublicKeyFromDatabase("1");
+        System.out.println("Current Public Key: " + publicKey);
+>>>>>>> buu
     }
 
     // Phương thức in hóa đơn chứa thông tin sản phẩm
