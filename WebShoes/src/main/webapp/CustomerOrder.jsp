@@ -1,11 +1,6 @@
 <%@ page import="java.util.Locale" %>
-<%@ page import="java.util.ResourceBundle" %><%--
-  Created by IntelliJ IDEA.
-  User: thang
-  Date: 12/10/2024
-  Time: 3:56 PM
-  To change this template use File | Settings | File Templates.
---%>
+<%@ page import="java.util.ResourceBundle" %>
+
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
@@ -192,7 +187,9 @@
                 <th>Tổng tiền</th>
                 <th>Ghi chú</th>
                 <th>Trạng thái</th>
-                <th></th>
+                <th>In hóa đơn</th>
+                <th>Hủy đơn hàng</th>
+                <th>Tải hóa đơn chữ ký</th>
             </tr>
             </thead>
             <tbody>
@@ -215,8 +212,21 @@
                                 <button type="submit" class="btn btn-success">In hóa đơn</button>
                             </form>
                         </td>
+                        <td>
+                            <form action="${pageContext.request.contextPath}/cancelOrder" method="POST">
+                                <input type="hidden" name="orderId" value="${o.orderId}">
+                                <button type="submit" class="btn btn-danger">Hủy đơn hàng</button>
+                            </form>
+                        </td>
+                        <td>
+                            <form action="${pageContext.request.contextPath}/UploadSignedFileServlet" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="orderId" value="${o.orderId}">
+                                <label for="signatureFile">Upload file chữ ký:</label>
+                                <input type="file" name="signatureFile" id="signatureFile" required>
+                                <button type="submit">Upload</button>
+                            </form>
+                        </td>
                     </tr>
-
                 </c:forEach>
             </c:if>
             </tbody>

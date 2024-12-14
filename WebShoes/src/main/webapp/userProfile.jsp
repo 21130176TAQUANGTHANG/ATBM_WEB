@@ -1,10 +1,3 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: thang
-  Date: 12/5/2024
-  Time: 10:36 PM
-  To change this template use File | Settings | File Templates.
---%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
@@ -176,10 +169,17 @@
                 <!-- Cột bên phải: Nội dung bổ sung -->
                 <div class="col-md-6">
                     <h4>Bảo mật </h4>
-                    <a href="KeyGenerationServlet">Tạo key</a><br>
-                    <a href="keyUpload.jsp">Đã có Key</a>
-                    <a href="">REPORT</a>
-
+                    <c:choose>
+                        <c:when test="${userHasKey}">
+                            <p class="text-success">Bạn đã có key. Nếu muốn thay thế, hãy tải lên key mới.</p>
+                            <a href="keyUpload.jsp"><i class="fas fa-upload mb-3"></i> Đã có Key</a><br>
+                        </c:when>
+                        <c:otherwise>
+                            <a href="KeyGenerationServlet"><i class="fas fa-key"></i> Tạo key</a><br>
+                        </c:otherwise>
+                    </c:choose>
+                    <h5 style="font-size: 14px;">Nếu bạn bị lộ private key hãy nhấn vào nút dưới đây:</h5>
+                    <a href="reportResult.jsp">REPORT</a>
                 </div>
             </div>
         </div>

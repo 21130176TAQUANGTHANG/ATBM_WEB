@@ -12,10 +12,10 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+
 
 @WebServlet("/downloadBill")
 public class DownloadBillServlet extends HttpServlet {
@@ -27,13 +27,14 @@ public class DownloadBillServlet extends HttpServlet {
 
         resp.setContentType("text/plain");
         resp.setHeader("Content-Disposition", "attachment;filename=bill.txt");
-
         try (PrintWriter writer = resp.getWriter()) {
             DbSecurity dbSecurity = new DbSecurity();
             dbSecurity.getOrdersByUserId(orderId, writer); // Truyền orderId vào phương thức
+
         } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
+
 }
