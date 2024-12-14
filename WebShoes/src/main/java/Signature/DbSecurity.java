@@ -6,15 +6,45 @@ import Order.OrderItem;
 
 import java.io.PrintWriter;
 import java.sql.*;
-
-import static java.sql.DriverManager.getConnection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class DbSecurity {
     Connection conn;
     PreparedStatement ps;
     ResultSet rs;
 
-    public void savePublicKeyToDatabase(String userId, String publicKey,  Timestamp createTime, Timestamp endTime) {
+
+    public boolean hasKey(String userId) {
+        String query = "SELECT publicKey FROM users WHERE userId=?";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setString(1, userId);
+            rs = ps.executeQuery();
+            // Kiểm tra nếu có public_key
+            if (rs.next() && rs.getString("publicKey") != null) {
+                return true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error checking key in database.", e);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+                if (conn != null) conn.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+
+    public void savePublicKeyToDatabase(String userId, String publicKey, Timestamp createTime, Timestamp endTime) {
         try {
             String query = "INSERT INTO users (userId, publicKey, createTime, endTime) VALUES (?, ?, ?, ?)";
             conn = new DBContext().getConnection();
@@ -23,6 +53,19 @@ public class DbSecurity {
             ps.setString(2, publicKey);
             ps.setTimestamp(3, createTime);
             ps.setTimestamp(4, endTime); // ban đầu là null
+            ps.executeUpdate();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void savePublicKeyToDatabase(String userId, String publicKey) {
+        try {
+            String query = "INSERT INTO users (userId, publicKey) VALUES (?, ?)";
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setString(1, userId);
+            ps.setString(2, publicKey);
             ps.executeUpdate();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -62,7 +105,21 @@ public class DbSecurity {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-    return null;
+        return null;
+    }
+
+    public void updateKeyEndTime(String userId) {
+        String query = "UPDATE users SET endTime = CURRENT_TIMESTAMP WHERE userId = ?";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setString(1, userId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            closeResources();
+        }
     }
 
     // Phương thức in hóa đơn chứa thông tin sản phẩm
@@ -122,8 +179,8 @@ public class DbSecurity {
             closeResources();
         }
     }
+
     private void printOrder(Order order, PrintWriter writer) {
-        String signature = getSignatureFromDatabase(order.getUserId(), order.getOrderId());
         writer.println("========== HÓA ĐƠN ==========");
         writer.println("Tên khách hàng: " + order.getName());
         writer.println("Địa chỉ: " + order.getAddress());
@@ -145,51 +202,8 @@ public class DbSecurity {
         }
         writer.println("----------------------------");
         writer.printf("Tổng tiền: %d\n", order.getTotalPrice()); // Dùng %d cho kiểu int
-        writer.println("Chữ ký điện tử: " + signature);
         writer.println("============================");
         writer.println();
-
-    }
-    private String getSignatureFromDatabase(String userId, int orderId) {
-        String query = "SELECT signature FROM order_signatures WHERE userId = ? AND orderId = ?";
-        try {
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
-            ps.setString(1, userId);
-            ps.setInt(2, orderId);
-            rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getString("signature");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Lỗi khi lấy chữ ký từ cơ sở dữ liệu.", e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            closeResources();
-        }
-        return "Không có chữ ký";
-    }
-    public void saveSignatureToDatabase(String userId, int orderId, String signature) {
-        try {
-            String query = "INSERT INTO order_signatures (userId, orderId, signature) VALUES (?, ?, ?)";
-            try {
-                conn = new DBContext().getConnection();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-            ps = conn.prepareStatement(query);
-            ps.setString(1, userId);
-            ps.setInt(2, orderId);
-            ps.setString(3, signature);
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Lỗi khi lưu chữ ký vào cơ sở dữ liệu.", e);
-        } finally {
-            closeResources();
-        }
     }
 
     private void closeResources() {
@@ -201,30 +215,42 @@ public class DbSecurity {
             throw new RuntimeException("Error closing database resources", e);
         }
     }
-    public static void main(String[] args) {
-//        DbSecurity db = new DbSecurity();
-//        int orderid = 27;
-//        PrintWriter writer = new PrintWriter(System.out);
-//        db.getOrdersByUserId(orderid, writer);
+
+    public String getPublicKey(String userId) {
+        String query = "SELECT publicKey FROM users WHERE userId = ?";
         try {
-            DbSecurity dbSecurity = new DbSecurity();
-            ElectronicSignature electronicSignature = new ElectronicSignature("DSA", "SHA1PRNG", "SUN");
-            SignatureService signatureService = new SignatureService(dbSecurity, electronicSignature);
-
-            // Tạo chữ ký cho đơn hàng
-            String userId = "1";
-            int orderId = 1001;
-            signatureService.signOrder(userId, orderId);
-
-            // In hóa đơn có chữ ký
-            PrintWriter writer = new PrintWriter(System.out);
-            dbSecurity.getOrdersByUserId(orderId, writer);
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setString(1, userId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("publicKey");
+            }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException("Lỗi khi lấy Public Key từ CSDL", e);
         }
-
+        return null;
     }
 
+    public void uploadSignature(int orderId, String signature) {
+        String query = "UPDATE orders SET signature = ? WHERE order_id = ?";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setString(1, signature); // Thiết lập giá trị chữ ký
+            ps.setInt(2, orderId);      // Thiết lập ID của đơn hàng
+            ps.executeUpdate();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                if (ps != null) ps.close();
+                if (conn != null) conn.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
 
 
 }

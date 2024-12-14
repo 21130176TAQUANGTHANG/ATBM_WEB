@@ -14,6 +14,7 @@ public class Order {
     private String address;
     private String phone;
     private String status;
+    private String signature;
     private List<OrderItem> orderItems; // Danh sách sản phẩm trong hóa đơn
 
 
@@ -21,7 +22,7 @@ public class Order {
     }
 
     // Constructor với đầy đủ tham số
-    public Order(int orderId, String userId, int totalPrice, Timestamp orderDate, String notes, String name, String address, String phone , String status) {
+    public Order(int orderId, String userId, int totalPrice, Timestamp orderDate, String notes, String name, String address, String phone , String status,String signature) {
         this.orderId = orderId;
         this.userId = userId;
         this.totalPrice = totalPrice;
@@ -31,6 +32,7 @@ public class Order {
         this.address = address;
         this.phone = phone;
         this.status = status;
+        this.signature = signature;
         this.orderItems = new ArrayList<>(); // Khởi tạo danh sách orderItems
 
     }
@@ -131,5 +133,29 @@ public class Order {
 
     public void setOrderItems(List<OrderItem> orderItems) {
         this.orderItems = orderItems;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
+    }
+
+    @Override
+    public String toString() {
+        return "Order{" +
+                "orderId=" + orderId +
+                ", userId='" + userId + '\'' +
+                ", totalPrice=" + totalPrice +
+                ", orderDate=" + orderDate +
+                ", notes='" + notes + '\'' +
+                ", name='" + name + '\'' +
+                ", address='" + address + '\'' +
+                ", phone='" + phone + '\'' +
+                ", status='" + status + '\'' +
+                ", orderItems=" + orderItems +
+                '}';
     }
 }
