@@ -337,4 +337,16 @@ public class DbSecurity {
             if (conn != null) conn.close();
         }
     }
+    public void deleteKey(String userId) {
+        String query = "DELETE FROM users WHERE userId = ?";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+
+            ps.setString(1, userId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

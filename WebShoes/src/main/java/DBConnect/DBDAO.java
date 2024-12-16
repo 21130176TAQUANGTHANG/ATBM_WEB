@@ -610,7 +610,8 @@ public class DBDAO {
                         rs.getString("name"),
                         rs.getString("address"),
                         rs.getString("phone"),
-                        rs.getString("status")
+                        rs.getString("status"),
+                        rs.getString("signature")
                 );
                 orderList.add(order);
             }
@@ -641,7 +642,8 @@ public class DBDAO {
                         rs.getString("name"),
                         rs.getString("address"),
                         rs.getString("phone"),
-                        rs.getString("status")
+                        rs.getString("status"),
+                        rs.getString("signature")
                 );
                 orderList.add(order);
             }
