@@ -15,7 +15,9 @@ public class DbSecurity {
     Connection conn;
     PreparedStatement ps;
     ResultSet rs;
-  public boolean hasKey(String userId) {
+
+
+    public boolean hasKey(String userId) {
         String query = "SELECT publicKey FROM users WHERE userId=?";
         try {
             conn = new DBContext().getConnection();
@@ -43,9 +45,6 @@ public class DbSecurity {
 
 
     public void savePublicKeyToDatabase(String userId, String publicKey, Timestamp createTime, Timestamp endTime) {
-
-    public void savePublicKeyToDatabase(String userId, String publicKey,  Timestamp createTime, Timestamp endTime) {
-
         try {
             String query = "INSERT INTO users (userId, publicKey, createTime, endTime) VALUES (?, ?, ?, ?)";
             conn = new DBContext().getConnection();
