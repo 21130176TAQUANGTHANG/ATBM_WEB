@@ -77,12 +77,12 @@ public class KeyGenerationServlet extends HttpServlet {
 
             // Gán Public Key vào request và session
             req.setAttribute("publicKey", encodedPublicKey);
-<<<<<<< HEAD
-            session.setAttribute("publicKey", chuKyDientu.publicKey);
-=======
-            req.getSession().setAttribute("publicKey", publicKey);
 
->>>>>>> d9448f7adc5b60fe22823635c568dbddfeac6c83
+            session.setAttribute("publicKey", chuKyDientu.publicKey);
+
+//            req.getSession().setAttribute("publicKey", publicKey);
+
+
 
             // Gán Private Key vào request và session
             req.setAttribute("privateKey", encodedPrivateKey);
