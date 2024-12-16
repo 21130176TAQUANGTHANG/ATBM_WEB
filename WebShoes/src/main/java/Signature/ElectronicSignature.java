@@ -18,7 +18,7 @@ import java.security.SignatureException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-public class ElectronicSignature {
+public class ElectronicSignature{
     KeyPair keyPair;
     Signature signature;
     SecureRandom secureRandom;
