@@ -5,103 +5,98 @@ import Order.Order;
 import Order.OrderItem;
 import java.io.PrintWriter;
 import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 
 public class DbSecurity {
-    private Connection conn;
-    private PreparedStatement ps;
-    private ResultSet rs;
+    Connection conn;
+    PreparedStatement ps;
+    ResultSet rs;
+
 
     public boolean hasKey(String userId) {
-        String query = "SELECT publicKey FROM users WHERE userId = ?";
+        String query = "SELECT publicKey FROM users WHERE userId=?";
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
             ps.setString(1, userId);
             rs = ps.executeQuery();
-            return rs.next() && rs.getString("publicKey") != null;
+            // Kiểm tra nếu có public_key
+            if (rs.next() && rs.getString("publicKey") != null) {
+                return true;
+            }
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException("Error checking key in database.", e);
         } finally {
-            closeResources();
+            try {
+                if (rs != null) rs.close();
+                if (ps != null) ps.close();
+                if (conn != null) conn.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+        return false;
     }
 
+
     public void savePublicKeyToDatabase(String userId, String publicKey, Timestamp createTime, Timestamp endTime) {
-        String query = "INSERT INTO users (userId, publicKey, createTime, endTime) VALUES (?, ?, ?, ?)";
         try {
+            String query = "INSERT INTO users (userId, publicKey, createTime, endTime) VALUES (?, ?, ?, ?)";
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
             ps.setString(1, userId);
             ps.setString(2, publicKey);
             ps.setTimestamp(3, createTime);
-            ps.setTimestamp(4, endTime);
+            ps.setTimestamp(4, endTime); // ban đầu là null
             ps.executeUpdate();
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            closeResources();
         }
     }
 
     public boolean isPublicKeyExist(String userId) {
         // Thay bằng truy vấn thực tế của bạn
         String query = "SELECT COUNT(*) FROM users WHERE userId = ?";
-    public void savePublicKeyToDatabase(String userId, String publicKey) {
-        savePublicKeyToDatabase(userId, publicKey, null, null);
-    }
-
-    public boolean isPublicKeyExist(String userId) {
-        String query = "SELECT COUNT(*) FROM users WHERE userId = ? AND endTime IS NULL";
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
             ps.setString(1, userId);
             rs = ps.executeQuery();
-            return rs.next() && rs.getInt(1) > 0;
+            while (rs.next()) {
+                if (rs.getInt(1) > 0) {
+                    return true;
+                }
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            closeResources();
         }
+
+        return false;
     }
 
     public String getPublicKeyFromDatabase(String userId) {
-        String query = "SELECT publicKey FROM users WHERE userId = ? AND endTime IS NULL";
+        String query = "SELECT publicKey FROM users WHERE userId = ?";
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
             ps.setString(1, userId);
             rs = ps.executeQuery();
-            return rs.next() ? rs.getString("publicKey") : null;
+            if (rs.next()) {
+                return rs.getString("publicKey");
+            }
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            closeResources();
         }
+        return null;
     }
 
-    public void updateEndTime(String userId, Timestamp endTime) {
-        String query = "UPDATE users SET endTime = ? WHERE userId = ? AND endTime IS NULL";
-        try {
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
-            ps.setTimestamp(1, endTime);
-            ps.setString(2, userId);
-            ps.executeUpdate();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            closeResources();
-        }
-    }
-
-    public void reportLostKey(String userId) {
-        updateEndTime(userId, new Timestamp(System.currentTimeMillis()));
-    }
-
-    public void deleteKey(String userId) {
-        String query = "DELETE FROM users WHERE userId = ?";
+    public void updateKeyEndTime(String userId) {
+        String query = "UPDATE users SET endTime = CURRENT_TIMESTAMP WHERE userId = ?";
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
@@ -114,43 +109,33 @@ public class DbSecurity {
         }
     }
 
-    public void uploadSignature(int orderId, String signature) {
-        String query = "UPDATE orders SET signature = ? WHERE order_id = ?";
-        try {
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
-            ps.setString(1, signature);
-            ps.setInt(2, orderId);
-            ps.executeUpdate();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            closeResources();
-        }
-    }
-
-    public void getOrdersByUserId(int orderId, PrintWriter writer) {
+    // Phương thức in hóa đơn chứa thông tin sản phẩm
+    public void getOrdersByUserId(int orderid, PrintWriter writer) {
         String query = "SELECT o.order_id, o.order_date, o.notes, o.total_price, o.name, o.address, o.phone, o.status, " +
                 "od.quantity, od.size, od.subtotal, p.productName, p.productPrice " +
                 "FROM orders o " +
                 "JOIN orderdetails od ON o.order_id = od.order_id " +
                 "JOIN product p ON od.product_id = p.productid " +
                 "WHERE o.order_id = ?";
+
         try {
             conn = new DBContext().getConnection();
             ps = conn.prepareStatement(query);
-            ps.setInt(1, orderId);
+            ps.setInt(1, orderid);
             rs = ps.executeQuery();
 
             Order currentOrder = null;
             while (rs.next()) {
-                int currentOrderId = rs.getInt("order_id");
-                if (currentOrder == null || currentOrder.getOrderId() != currentOrderId) {
+                int orderId = rs.getInt("order_id");
+                if (currentOrder == null || currentOrder.getOrderId() != orderId) {
+                    // Nếu chuyển sang hóa đơn mới, in hóa đơn cũ
                     if (currentOrder != null) {
                         printOrder(currentOrder, writer);
                     }
+
+                    // Khởi tạo hóa đơn mới
                     currentOrder = new Order(
-                            currentOrderId,
+                            orderId,
                             rs.getTimestamp("order_date"),
                             rs.getString("notes"),
                             rs.getInt("total_price"),
@@ -160,20 +145,23 @@ public class DbSecurity {
                             rs.getString("status")
                     );
                 }
+
+                // Thêm sản phẩm vào hóa đơn
                 currentOrder.addOrderItem(new OrderItem(
-                        rs.getString("productName"),
-                        rs.getInt("quantity"),
-                        rs.getInt("productPrice"),
-                        rs.getInt("subtotal"),
-                        rs.getString("size")
+                        rs.getString("productName"),  // Tên sản phẩm
+                        rs.getInt("quantity"),       // Số lượng
+                        rs.getInt("productPrice"),// Giá sản phẩm
+                        rs.getInt("subtotal"),    // Tổng tiền (subtotal)
+                        rs.getString("size")         // Kích thước (size)
                 ));
             }
 
+            // In hóa đơn cuối cùng
             if (currentOrder != null) {
                 printOrder(currentOrder, writer);
             }
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         } finally {
             closeResources();
         }
@@ -200,12 +188,8 @@ public class DbSecurity {
         }
         writer.println("----------------------------");
         writer.printf("Total Price: %d\n", order.getTotalPrice()); // Use %d for int type
-                    (double) item.getPrice(),
-                    (double) item.getSubtotal());
-        }
-        writer.println("----------------------------");
-        writer.printf("Tổng tiền: %d\n", order.getTotalPrice());
         writer.println("============================");
+        writer.println();
     }
 
 
@@ -218,6 +202,7 @@ public class DbSecurity {
             throw new RuntimeException("Error closing database resources", e);
         }
     }
+
     public String getPublicKey(String userId) {
         String query = "SELECT publicKey FROM users WHERE userId = ?";
         try {
