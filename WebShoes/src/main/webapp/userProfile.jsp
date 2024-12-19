@@ -206,8 +206,6 @@
             <a href="LogoutServlet" class="btn btn-danger">Đăng xuất</a>
         </div>
     </div>
-
-
 </div>
 </body>
 </html>
