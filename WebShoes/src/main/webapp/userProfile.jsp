@@ -182,8 +182,22 @@
                     <a href="KeyGenerationServlet">Tạo key</a><br>
                     <a href="keyUpload.jsp">Đã có Key</a><br>
                     <h5 style="font-size: 14px;">Nếu bạn bị lộ private key hãy nhấn vào nút dưới đây:</h5>
-                    <a href="reportResult.jsp">REPORT</a>
-                </div>
+                    <form action="ReportKeyServlet" method="POST">
+                        <button type="submit" class="btn btn-danger">Report</button>
+                    </form>
+                    <!-- Hiển thị thông báo nếu có -->
+                    <c:if test="${not empty deletionTime}">
+                        <div class="alert alert-warning mt-3">
+                            Khóa của bạn sẽ bị xóa vào lúc <strong>${deletionTime}</strong>.
+                        </div>
+                    </c:if>
+
+                    <!-- Hiển thị thông báo key đã xóa thành công -->
+                    <c:if test="${not empty successMessage}">
+                        <div class="alert alert-success mt-3">
+                                ${successMessage}
+                        </div>
+                    </c:if>                </div>
             </div>
         </div>
 
@@ -192,8 +206,6 @@
             <a href="LogoutServlet" class="btn btn-danger">Đăng xuất</a>
         </div>
     </div>
-
-
 </div>
 </body>
 </html>
