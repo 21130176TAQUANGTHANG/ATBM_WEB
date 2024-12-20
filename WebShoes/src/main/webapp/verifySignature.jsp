@@ -1,32 +1,52 @@
-
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify Invoice Signature</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<div class="container mt-5">
-    <div class="d-flex justify-content-between p-2">
-        <h2>Đơn hàng</h2>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href=admin.jsp>Admin Dashboard</a>
     </div>
-    <table class="table table-bordered">
-        <thead>
+</nav>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Danh sách Đơn hàng</h2>
+    </div>
+
+    <!-- Table -->
+    <table class="table table-striped table-hover text-center align-middle">
+        <thead class="table-dark">
         <tr>
             <th>OrderId</th>
             <th>UserId</th>
             <th>TotalPrice</th>
             <th>OrderDate</th>
+            <th>Status</th>
+            <th>Confirm</th>
+            <th>Cancel</th>
             <th>Verify Signature</th>
+            <th>print invoice</th>
         </tr>
         </thead>
         <tbody>
+        <!-- Nếu không có đơn hàng -->
         <c:if test="${empty orderList_verify}">
             <tr>
-                <td colspan="8" style="text-align: center;">No orders found.</td>
+                <td colspan="7" class="text-center text-danger">Không có đơn hàng nào.</td>
             </tr>
         </c:if>
+
+        <!-- Lặp danh sách đơn hàng -->
         <c:if test="${not empty orderList_verify}">
             <c:forEach var="o" items="${orderList_verify}">
                 <tr>
@@ -34,22 +54,41 @@
                     <td>${o.userId}</td>
                     <td>${o.totalPrice}</td>
                     <td>${o.orderDate}</td>
-                    <td>${o.status}</td>
+                    <td>
+                        <span class="badge ${o.status eq 'Chờ xác nhận' ? 'bg-warning' : 'bg-success'}">
+                                ${o.status}
+                        </span>
+                    </td>
                     <td>
                         <c:if test="${o.status eq 'Chờ xác nhận'}">
                             <form method="post" action="ConfirmOrderServlet">
-                                <input type="hidden" name="orderId" value="${o.orderId}" />
-                                <button type="submit" class="btn btn-success">Xác nhận</button>
+                                <input type="hidden" name="orderId" value="${o.orderId}"/>
+                                <button type="submit" class="btn btn-success btn-sm">Xác nhận</button>
                             </form>
                         </c:if>
                     </td>
-
                     <td>
-                        <!-- Nút kiểm tra chữ ký -->
+                        <c:if test="${o.status eq 'Chờ xác nhận'}">
+                            <form action="CancelOrderServlet" method="post">
+                                <input type="hidden" name="orderId" value="${o.orderId}" />
+                                <button type="submit" class="btn btn-danger btn-sm">Hủy Đơn Hàng</button>
+                            </form>
+                        </c:if>
+                    </td>
+                    <td>
                         <form action="VerifySignatureServlet" method="post">
                             <input type="hidden" name="orderId" value="${o.orderId}">
-                            <button type="submit" class="btn btn-primary">Verify Signature</button>
+                            <button type="submit" class="btn btn-primary btn-sm">Verify Signature</button>
                         </form>
+                    </td>
+                    <td>
+                        <form action="${pageContext.request.contextPath}/PrintInvoiceServlet" method="get">
+                            <input type="hidden" name="orderId" value="${o.orderId}" />
+                            <button type="submit" class="btn-danger">Print Invoice</button>
+                        </form>
+
+                    </td>
+
                     </td>
                 </tr>
             </c:forEach>
@@ -57,8 +96,8 @@
         </tbody>
     </table>
 
-    <!-- Hiển thị nút phân trang -->
-    <nav aria-label="Page navigation example">
+    <!-- Pagination -->
+    <nav aria-label="Page navigation">
         <ul class="pagination justify-content-center">
             <c:forEach var="i" begin="1" end="${totalPages}">
                 <li class="page-item ${i == currentPage ? 'active' : ''}">
@@ -69,19 +108,31 @@
     </nav>
 
     <!-- Hiển thị kết quả kiểm tra -->
+    <c:if test="${not empty error}">
+        <div class="alert alert-danger">
+                ${error}
+        </div>
+    </c:if>
     <c:if test="${not empty verifyResult}">
-        <div class="verify-result">
-            <h3>Verification Result</h3>
+        <div class="mt-4">
+            <h4>Kết quả kiểm tra chữ ký</h4>
             <c:choose>
                 <c:when test="${verifyResult.valid}">
-                    <p class="text-success">✔ The invoice is valid.</p>
+                    <div class="alert alert-success">
+                        ✔ Chữ ký hợp lệ.
+                    </div>
                 </c:when>
                 <c:otherwise>
-                    <p class="text-danger">✘ The invoice is invalid or has been tampered with.</p>
+                    <div class="alert alert-danger">
+                        ✘ Chữ ký không hợp lệ hoặc đã bị giả mạo.
+                    </div>
                 </c:otherwise>
             </c:choose>
         </div>
     </c:if>
 </div>
+
+<!-- Bootstrap JS Bundle (with Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

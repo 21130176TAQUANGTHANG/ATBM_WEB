@@ -58,7 +58,18 @@ public class DbSecurity {
             throw new RuntimeException(e);
         }
     }
+    public boolean cancelOrder(String orderId) {
+        String query = "UPDATE orders SET status = 'Đã hủy' WHERE order_id = ? AND status = 'Chờ xác nhận'";
+        try (Connection conn = new DBContext().getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
 
+            ps.setString(1, orderId);
+            int rowsUpdated = ps.executeUpdate();
+            return rowsUpdated > 0; // Nếu có ít nhất 1 hàng được cập nhật, trả về true.
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi hủy đơn hàng.", e);
+        }
+    }
     public boolean isPublicKeyExist(String userId) {
         // Thay bằng truy vấn thực tế của bạn
         String query = "SELECT COUNT(*) FROM users WHERE userId = ?";
@@ -106,6 +117,50 @@ public class DbSecurity {
             throw new RuntimeException(e);
         } finally {
             closeResources();
+        }
+    }
+    // Lấy public key hiện tại từ cơ sở dữ liệu (dùng cho việc báo mất key)
+    public String getCurrentPublicKey(String userId) {
+        String query = "SELECT publicKey FROM users WHERE userId = ? AND endTime IS NULL";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+            ps.setString(1, userId);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getString("publicKey");
+            }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+    public void reportLostKey(String userId) {
+        String query = "UPDATE users SET endTime = ? WHERE userId = ? AND endTime IS NULL";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+
+            // Thời điểm hiện tại
+            Timestamp currentTime = new Timestamp(System.currentTimeMillis());
+            ps.setTimestamp(1, currentTime); // Gán endTime = thời điểm hiện tại
+            ps.setString(2, userId);
+
+            ps.executeUpdate();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public void deleteKey(String userId) {
+        String query = "DELETE FROM users WHERE userId = ?";
+        try {
+            conn = new DBContext().getConnection();
+            ps = conn.prepareStatement(query);
+
+            ps.setString(1, userId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -337,16 +392,5 @@ public class DbSecurity {
             if (conn != null) conn.close();
         }
     }
-    public void deleteKey(String userId) {
-        String query = "DELETE FROM users WHERE userId = ?";
-        try {
-            conn = new DBContext().getConnection();
-            ps = conn.prepareStatement(query);
 
-            ps.setString(1, userId);
-            ps.executeUpdate();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 }
